@@ -1,0 +1,56 @@
+# === Node.js / Backend ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# === React / Frontend ===
+frontend/node_modules/
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# === Logs ===
+logs
+*.log
+logs/*.log
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# === Coverage / Testing ===
+coverage/
+*.lcov
+jest-test-results.json
+
+# === OS Generated Files ===
+.DS_Store
+Thumbs.db
+
+# === Docker ===
+*.tar
+*.pid
+*.seed
+*.pid.lock
+
+# === Kubernetes & Config ===
+# (keep YAML files for manifests, ignore local kube configs)
+.kube/
+*.crt
+*.key
+
+# === Misc ===
+*.swp
+*.swo
+.idea/
+.vscode/
