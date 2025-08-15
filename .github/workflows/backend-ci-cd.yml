@@ -2,16 +2,17 @@ name: Backend CI/CD
 
 on:
   push:
+    branches:
+      - main
     paths:
       - 'backend/**'
-    branches:
-      - master
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Log in to Azure
@@ -19,18 +20,27 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Build and push Docker image to ACR
+      - name: Log in to ACR
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build backend Docker image
         run: |
-          az acr login --name ${{ secrets.ACR_NAME }}
-          docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/backend:${{ github.sha }} ./backend
-          docker push ${{ secrets.ACR_NAME }}.azurecr.io/backend:${{ github.sha }}
+          cd backend
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest .
+
+      - name: Push backend image
+        run: docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
 
       - name: Set up kubectl
         run: |
           echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > kubeconfig
           export KUBECONFIG=kubeconfig
 
-      - name: Deploy to AKS
+      - name: Deploy backend to AKS
         run: |
-          kubectl set image deployment/backend backend=${{ secrets.ACR_NAME }}.azurecr.io/backend:${{ github.sha }}
-          kubectl rollout status deployment/backend
+          kubectl set image deployment/backend-deployment backend=${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
+          kubectl rollout status deployment/backend-deployment
