@@ -22,7 +22,6 @@ function App() {
       <input value={input} onChange={(e) => setInput(e.target.value)} />
       <button onClick={handleSubmit}>Send</button>
       <p>Response: {response}</p>
-      <p>This could be the final fix in CICD</p>
     </div>
   );
 }
