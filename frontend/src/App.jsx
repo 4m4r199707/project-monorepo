@@ -18,7 +18,7 @@ function App() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h1>Echo App Setting up CI/CD</h1>
+      <h1>Echo App Setting up CI/CD Test</h1>
       <input value={input} onChange={(e) => setInput(e.target.value)} />
       <button onClick={handleSubmit}>Send</button>
       <p>Response: {response}</p>
