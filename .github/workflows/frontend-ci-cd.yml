@@ -34,17 +34,17 @@ jobs:
       - name: Build frontend Docker image
         run: |
           cd frontend
-          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:${{ github.sha }} .
-          docker tag ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:${{ github.sha }} \
-            ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend-app:${{ github.sha }} .
+          docker tag ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend-app:${{ github.sha }} \
+            ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend-app:latest
 
       # 5️⃣ Push both tags (commit-based + latest)
       - name: Push frontend image
         run: |
-          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:${{ github.sha }}
-          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend-app:${{ github.sha }}
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend-app:latest
 
-      # 6️⃣ Set up kubectl with AKS credentials (NO base64 decode issues)
+      # 6️⃣ Set up kubectl with AKS credentials
       - name: Set AKS context
         uses: azure/aks-set-context@v3
         with:
@@ -52,9 +52,17 @@ jobs:
           cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
           subscription: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # 7️⃣ Deploy to AKS
+      # 7️⃣ Deploy to AKS (Create if missing)
       - name: Deploy frontend to AKS
         run: |
-          kubectl set image deployment/frontend-deployment \
-            frontend=${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:${{ github.sha }} --record
-          kubectl rollout status deployment/frontend-deployment --timeout=120s
+          if kubectl get deployment frontend >/dev/null 2>&1; then
+            echo "Updating existing deployment..."
+            kubectl set image deployment/frontend \
+              frontend=${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend-app:${{ github.sha }} -n default
+          else
+            echo "Deployment not found — creating..."
+            kubectl apply -f k8s/frontend-deployment.yaml
+            kubectl set image deployment/frontend \
+              frontend=${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend-app:${{ github.sha }} -n default
+          fi
+          kubectl rollout status deployment/frontend -n default --timeout=120s
